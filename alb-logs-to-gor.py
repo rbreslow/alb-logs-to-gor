@@ -6,17 +6,26 @@ import argparse
 from datetime import datetime
 import hashlib
 import re
+import requests
 
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('input', nargs='?', type=argparse.FileType('r'),
+    parser.add_argument('--refresh-token', nargs='?', dest="refresh_token",
+                        type=str, required=True, help='refresh token')
+    parser.add_argument('input_file', nargs='?', type=argparse.FileType('r'),
                         default=sys.stdin, help='csv file containing alb logs from tiles.rasterfoundry.com')
 
     args = parser.parse_args()
 
+    token = requests.post(
+        "https://app.rasterfoundry.com/api/tokens/",
+        json={"refresh_token": args.refresh_token},
+    ).json()["id_token"]
+
     url_matcher = re.compile(".+\.com(:\d{1,})?\/(.+)")
-    reader = csv.reader(args.input, delimiter=',')
+    token_matcher = re.compile("(\?|&)token=(.+)")
+    reader = csv.reader(args.input_file, delimiter=',')
 
     # Skip headers
     next(reader)
@@ -30,6 +39,7 @@ def main():
             continue
 
         path = url_matcher.split(request_url)[-2]
+        path = token_matcher.sub("\\1token=" + token, path)
 
         request = (
             "1 {} {}\n".format(hashlib.sha1(
@@ -39,7 +49,7 @@ def main():
             "Accept-Encoding: gzip\n",
             "Host: tiles.rasterfoundry.com\n",
             "Connection: close\n",
-            "\n🐵🙈🙉"
+            "\n\n🐵🙈🙉"
         )
 
         print(''.join(request))
