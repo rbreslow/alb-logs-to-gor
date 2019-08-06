@@ -25,6 +25,8 @@ def main():
 
     url_matcher = re.compile(".+\.com(:\d{1,})?\/(.+)")
     token_matcher = re.compile("(\?|&)token=(.+)")
+    project_id_matcher = re.compile(
+        "2ff937c2-1efd-40d1-8ef1-84fabf1cd25f\/(.+)")
     reader = csv.reader(args.input_file, delimiter=',')
 
     # Skip headers
@@ -40,6 +42,13 @@ def main():
 
         path = url_matcher.split(request_url)[-2]
         path = token_matcher.sub("\\1token=" + token, path)
+
+        if project_id_matcher.match(path):
+            path = project_id_matcher.sub(
+                "a50adc14-95c3-4159-90a3-6fde0c37667b/\\1", path)
+
+        if path.startswith('2c7abeda-145f-421f-9417-f2785b530200') or path.startswith('8cf57be8-0d6a-49bf-8c79-f49ae4a0eaf7'):
+            continue
 
         request = (
             "1 {} {}\n".format(hashlib.sha1(
