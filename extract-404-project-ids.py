@@ -27,22 +27,17 @@ with open("responses_0.log", "rb") as lines:
             line = line.decode("utf-8")
 
             if get_this_line:
+                # print(line.split("?")[0])
                 project_ids.append(project_id_matcher.search(line).group(1))
 
             if not initial_req_id_matcher.match(line):
                 get_this_line = False
                 continue
 
-            found_match = False
-
             for req_id in req_ids:
                 if req_id in line:
                     get_this_line = True
-                    found_match = True
                     break
-
-            if not found_match:
-                get_this_line = False
         except:
             continue
 
